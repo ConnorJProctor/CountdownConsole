@@ -1,18 +1,23 @@
 ﻿using CountdownConsole;
 using ConsoleTables;
 
+// 
+string filePath = "events.json";
+List<Event> existingEvents = StorageHelper.LoadEventsFromFile(filePath)
+    .OrderBy(e => e.EndDate)
+    .ToList();
+
 Console.WriteLine("Welcome to the Countdown Console!\n");
 
-List<Event> existingEvents = new List<Event>();
 Boolean exitApp = false;
-
 while (!exitApp)
 {
     Console.WriteLine("What would you like to do?\n" +
         $"E - View Existing Events\n" +
         $"N - Add a New Event\n" +
+        $"U - Update an Existing Event\n" +
         $"R - Remove an Existing Event\n" +
-        $"Q - Quit Application");
+        $"Q - Save Changes & Quit Application");
 
     string userChoice = Console.ReadLine().ToUpper();
 
@@ -47,28 +52,99 @@ while (!exitApp)
                 $"Date: {newEndDate}\n" +
                 $"Confirm? (y/n)");
 
-            string confirmNewEvent = Console.ReadLine();
+            string confirmNewEvent = Console.ReadLine().ToUpper();
 
             // Calculate the new ID
-            int newId;
-            if (!existingEvents.Any())
+
+            if (confirmNewEvent == "Y")
             {
-                newId = 1;
+                int newId;
+                if (!existingEvents.Any())
+                {
+                    newId = 1;
+                }
+                else
+                {
+                    newId = existingEvents.Max(e => e.ID) + 1;
+                }
+
+                Event newEvent = new Event();
+                newEvent.ID = newId;
+                newEvent.Title = newTitle;
+                newEvent.EndDate = newEndDate;
+
+                existingEvents.Add(newEvent);
+                Console.WriteLine($"Added event '{newEvent.Title}' successfully!");
+
+            }
+
+
+            break;
+
+
+        case "U":
+            Console.WriteLine("\nYou've chosen to update an existing event.\n");
+
+            Console.WriteLine("Please enter the ID of the event you would like to update: ");
+            int idToUpdate = Convert.ToInt32(Console.ReadLine());
+
+            Event eventToUpdate = existingEvents.FirstOrDefault(e => e.ID == idToUpdate);
+
+            if (eventToUpdate != null)
+            {
+
+                Console.WriteLine($"Please enter the new title or leave blank to keep {eventToUpdate.Title}: ");
+                string updatedTitle = Console.ReadLine();
+                if (updatedTitle.Length < 1)
+                {
+                    updatedTitle = eventToUpdate.Title;
+                }
+
+                Console.WriteLine($"\nPlease enter new end date or leave blank to keep {eventToUpdate.EndDate}: ");
+                string updatedDateInput = Console.ReadLine();
+
+                DateTime updatedEndDate;
+                if (updatedDateInput.Length < 1)
+                {
+                    updatedEndDate = eventToUpdate.EndDate;
+                }
+                else
+                {
+                    updatedEndDate = DateTime.Parse(updatedDateInput);
+                }
+
+
+                Console.WriteLine($"\nUpdating event details from:\n" +
+                    $"Title: {eventToUpdate.Title}\n" +
+                    $"Date: {eventToUpdate.EndDate}\n");
+
+                Console.WriteLine($"\nUpdating event details to:\n" +
+                    $"Title: {updatedTitle}\n" +
+                    $"Date: {updatedEndDate}\n" +
+                    $"Confirm? (y/n)");
+
+                string confirmUpdateEvent = Console.ReadLine().ToUpper();
+
+                if (confirmUpdateEvent == "Y")
+                {
+                    eventToUpdate.Title = updatedTitle;
+                    eventToUpdate.EndDate = updatedEndDate;
+
+                    Console.WriteLine($"Updated event '{eventToUpdate.Title}' successfully!");
+
+                }
+
+
             }
             else
             {
-                newId = existingEvents.Max(e => e.ID) + 1;
+                Console.WriteLine($"Could not find an event with ID {idToUpdate}");
+
             }
 
-            Event newEvent = new Event();
-            newEvent.ID             = newId;
-            newEvent.Title          = newTitle;
-            newEvent.EndDate        = newEndDate;
-
-            existingEvents.Add(newEvent);
-            Console.WriteLine($"Added event '{newEvent.Title}' successfully!");
 
             break;
+
 
         case "R":
             Console.WriteLine("\nYou've chosen to remove an existing event.\n");
@@ -77,12 +153,12 @@ while (!exitApp)
             Console.WriteLine("Please enter the ID of the event you would like to remove: ");
             int idToRemove = Convert.ToInt32(Console.ReadLine());
 
-            Event selectedEvent = existingEvents.FirstOrDefault(e => e.ID == idToRemove);
+            Event eventToRemove = existingEvents.FirstOrDefault(e => e.ID == idToRemove);
 
-            if (selectedEvent != null)
+            if (eventToRemove != null)
             {
-                existingEvents.Remove(selectedEvent);
-                Console.WriteLine($"Removed event '{selectedEvent.Title}' successfully!");
+                existingEvents.Remove(eventToRemove);
+                Console.WriteLine($"Removed event '{eventToRemove.Title}' successfully!");
             }
             else
             {
@@ -93,6 +169,8 @@ while (!exitApp)
 
 
         case "Q":
+            StorageHelper.SaveEventsToFile(existingEvents, filePath);
+            Console.WriteLine("Events saved. Exiting application.");
             Environment.Exit(0);
             break;
 
