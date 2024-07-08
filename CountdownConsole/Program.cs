@@ -7,6 +7,15 @@ List<Event> existingEvents = StorageHelper.LoadEventsFromFile(filePath)
     .OrderBy(e => e.EndDate)
     .ToList();
 
+string hourglass = @"
++====+
+|(::)|
+| )( |
+|(..)|
++====+
+";
+
+Console.WriteLine(hourglass);
 Console.WriteLine("Welcome to the Countdown Console!\n");
 
 Boolean exitApp = false;
